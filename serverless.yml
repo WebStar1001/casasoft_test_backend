@@ -1,0 +1,84 @@
+service: casasoft-test-backend
+
+frameworkVersion: "2"
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: us-east-1
+  lambdaHashingVersion: 20201221
+  environment:
+    INGREDIENT_TABLE: "ingredient_list"
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: "*"
+  apiGateway:
+    shouldStartNameWithService: true
+functions:
+  create:
+    handler: ingredients/create.create
+    events:
+      - http:
+          path: ingredients
+          method: post
+          cors: true
+
+  list:
+    handler: ingredients/list.list
+    events:
+      - http:
+          path: ingredients
+          method: get
+          cors: true
+
+  get:
+    handler: ingredients/get.get
+    events:
+      - http:
+          path: ingredients/{id}
+          method: get
+          cors: true
+
+  update:
+    handler: ingredients/update.update
+    events:
+      - http:
+          path: ingredients/{id}
+          method: put
+          cors: true
+
+  delete:
+    handler: ingredients/delete.delete
+    events:
+      - http:
+          path: ingredients/{id}
+          method: delete
+          cors: true
+
+resources:
+  Resources:
+    IngredientsDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Delete
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.INGREDIENT_TABLE}
